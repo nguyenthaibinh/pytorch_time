@@ -45,7 +45,6 @@ class STGCNBlock(nn.Module):
     isolation, followed by a graph convolution, followed by another temporal
     convolution on each node.
     """
-
     def __init__(self, in_channels, spatial_channels, out_channels,
                  num_nodes):
         """
@@ -87,7 +86,6 @@ class STGCNBlock(nn.Module):
         return self.batch_norm(t3)
         # return t3
 
-
 class STGCN(nn.Module):
     """
     Spatio-temporal graph convolutional network as described in
@@ -95,9 +93,7 @@ class STGCN(nn.Module):
     Input should have shape (batch_size, num_nodes, num_input_time_steps,
     num_features).
     """
-
-    def __init__(self, num_nodes, num_features, num_timesteps_input,
-                 num_timesteps_output):
+    def __init__(self, adj_mx, in_dim, seq_len, out_len):
         """
         :param num_nodes: Number of nodes in the graph.
         :param num_features: Number of features at each node in each time step.
@@ -107,23 +103,36 @@ class STGCN(nn.Module):
         output by the network.
         """
         super(STGCN, self).__init__()
-        self.block1 = STGCNBlock(in_channels=num_features, out_channels=64,
-                                 spatial_channels=16, num_nodes=num_nodes)
-        self.block2 = STGCNBlock(in_channels=64, out_channels=64,
-                                 spatial_channels=16, num_nodes=num_nodes)
-        self.last_temporal = TimeBlock(in_channels=64, out_channels=64)
-        self.fully = nn.Linear((num_timesteps_input - 2 * 5) * 64,
-                               num_timesteps_output)
 
-    def forward(self, A_hat, X):
+        self.register_buffer('A', adj_mx)
+        num_nodes = self.A.size(0)
+        self.block1 = STGCNBlock(in_channels=in_dim, out_channels=64, spatial_channels=16, num_nodes=num_nodes)
+        self.block2 = STGCNBlock(in_channels=64, out_channels=64, spatial_channels=16, num_nodes=num_nodes)
+        self.last_temporal = TimeBlock(in_channels=64, out_channels=64)
+        self.fully = nn.Linear((seq_len - 2 * 5) * 64, out_len)
+
+    def forward(self, X):
         """
         :param X: Input data of shape (batch_size, num_nodes, num_timesteps,
         num_features=in_channels).
         :param A_hat: Normalized adjacency matrix.
         """
-        out1 = self.block1(X, A_hat)
-        out2 = self.block2(out1, A_hat)
+        X = X.permute(0, 2, 3, 1)       # B, N, T, C
+        out1 = self.block1(X, self.A)
+        out2 = self.block2(out1, self.A)
         out3 = self.last_temporal(out2)
         out4 = self.fully(out3.reshape((out3.shape[0], out3.shape[1], -1)))
-        return out4
+        out4 = out4.permute(0, 2, 1).contiguous()
+        out4 = out4.unsqueeze(-1)
+        return out4, None
 
+def get_model(args, A):
+    model = STGCN(adj_mx=A, in_dim=args.in_dim, seq_len=args.window, out_len=args.out_len)
+
+    if args.load_weights:
+        print("Loading pretrained weights...")
+        model.load_state_dict(torch.load(f'{args.weigth_path}'))
+    else:
+        print("Initializing model weights...")
+
+    return model

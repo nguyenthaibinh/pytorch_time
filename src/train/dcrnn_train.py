@@ -1,18 +1,16 @@
 from pathlib import Path
 import torch as th
-from baselines.agcrn.agcrn import get_model
+from baselines.dcrnn.dcrnn import get_model
 from utils import print_model_parameters
 from utils import ConfigLoader, get_root_dir, get_hostname, get_this_filepath, get_this_filename, get_basic_parser, \
     process_args
-from datasets.data_loader import load_dataset, load_adj
-from datasets.pems_data import load_pems_adj
+from datasets.data_loader import load_dataset, load_adj, load_pems_adj, get_normalized_adj
 from trainer import Trainer
 from icecream import ic
+import numpy as np
 
 def add_arguments(parser):
     parser.add_argument('--rnn-units', type=int, default=64, help='Dimensionality of the rnn hidden layers.')
-    parser.add_argument('--embed-dim', type=int, default=10, help='Dimensionality of the node embedding.')
-    parser.add_argument('--cheb-k', type=int, default=3)
     return parser
 
 def main():
@@ -34,14 +32,17 @@ def main():
     ref_adj = None
     if args.dataset in ['metr_la', 'pems_bay']:
         args.adj_file = conf['adj_file']
-        predefined_A = load_adj(args.adj_file)
+        A = load_adj(args.adj_file)
+        # A = np.tril(A) + np.tril(A, -1).T
     elif args.dataset in ['pems03', 'pems04', 'pems07', 'pems08']:
         args.adj_file = conf['adj_file']
-        predefined_A = load_pems_adj(args.adj_file, args.num_nodes)
+        A = load_pems_adj(args.adj_file, args.num_nodes)
+        A = np.tril(A) + np.tril(A, -1).T
     else:
-        # print("This is neither pems03-08, metr_la nor pems_bay dataset!!!")
-        # return
-        predefined_A = None
+        A = None
+
+    if A is not None:
+        A = th.from_numpy(A)
 
     train_loader = dataloader['train_loader']
     val_loader = dataloader['val_loader']
@@ -50,7 +51,7 @@ def main():
 
     # predefined_A = load_adj(args.adj_file)
 
-    model = get_model(args)
+    model = get_model(args, A)
     args.model_class = model.__class__
     args.model_class_name = model.__class__.__name__
     model = model.to(args.device, dtype=th.float)

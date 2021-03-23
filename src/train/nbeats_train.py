@@ -7,7 +7,7 @@ from utils import print_model_parameters
 from utils import ConfigLoader, get_root_dir, get_hostname, get_this_filepath, get_this_filename, get_basic_parser, \
     process_args
 from datasets.data_loader import load_dataset, load_adj
-from datasets.pems_data import get_adjacency_matrix
+from datasets.pems_data import load_pems_adj
 from trainer import Trainer
 from icecream import ic
 from datasets.generate_training_data.gen_ref_adj_mx import get_ref_adj_mx

@@ -6,7 +6,7 @@ from scipy.sparse.linalg import eigs
 from utils import ConfigLoader
 from datasets.data_utils import get_dataloader
 
-def get_adjacency_matrix(distance_df_filename, num_of_vertices):
+def load_pems_adj(distance_df_filename, num_of_vertices):
     '''
     Parameters
     ----------
@@ -30,6 +30,19 @@ def get_adjacency_matrix(distance_df_filename, num_of_vertices):
     # A = np.reshape(num_of_vertices, num_of_vertices)
 
     return A
+
+def get_normalized_adj(A):
+    """
+    Returns the degree normalized adjacency matrix.
+    """
+    A = np.tril(A) + np.tril(A, -1).T
+    A_hat = A + np.diag(np.ones(A.shape[0], dtype=np.float32))
+    D = np.array(np.sum(A_hat, axis=1)).reshape((-1,))
+    D[D <= 10e-5] = 10e-5    # Prevent infs
+    diag = np.reciprocal(np.sqrt(D))
+    A_wave = np.multiply(np.multiply(diag.reshape((-1, 1)), A_hat),
+                         diag.reshape((1, -1)))
+    return A_wave
 
 def normalize_adj_matrix(A, max_hop, dilation=1):
     # create a symmetric matrix from A
@@ -82,7 +95,7 @@ def load_pems_data(args, load_adj_matrix=True):
     # load the first dimension (traffic flow data) only.
     data = np.load(args.data_file)['data'][:, :, 0]
     if load_adj_matrix:
-        adj_matrix = get_adjacency_matrix(distance_df_filename=args.adj_file, num_of_vertices=args.num_nodes)
+        adj_matrix = load_pems_adj(distance_df_filename=args.adj_file, num_of_vertices=args.num_nodes)
     else:
         adj_matrix = None
 

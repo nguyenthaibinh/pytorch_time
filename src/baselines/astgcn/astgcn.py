@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from baselines.astgcn.astgcn_lib.utils import scaled_Laplacian, cheb_polynomial
 
-
 class Spatial_Attention_layer(nn.Module):
     """
     compute spatial attention scores
