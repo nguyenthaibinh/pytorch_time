@@ -2,10 +2,8 @@ from pathlib import Path
 import torch as th
 from baselines.rnn.rnn_mlp import get_model
 from utils import print_model_parameters
-from utils import ConfigLoader, get_root_dir, get_hostname, get_this_filepath, get_this_filename, get_basic_parser, \
-    process_args
-from datasets.data_loader import load_dataset, load_adj
-from datasets.pems_data import get_adjacency_matrix
+from utils import get_root_dir, get_this_filepath, get_this_filename, get_basic_parser, process_args
+from datasets.data_loader import load_dataset
 from trainer import Trainer
 from icecream import ic
 
@@ -30,24 +28,11 @@ def main():
     # load dataset
     dataloader = load_dataset(args.data_dir, args.batch_size, args.val_batch_size, args.test_batch_size,
                               normalizer=args.normalizer)
-    ref_adj = None
-    if args.dataset in ['metr_la', 'pems_bay']:
-        args.adj_file = conf['adj_file']
-        predefined_A = load_adj(args.adj_file)
-    elif args.dataset in ['pems03', 'pems04', 'pems07', 'pems08']:
-        args.adj_file = conf['adj_file']
-        predefined_A = get_adjacency_matrix(args.adj_file, args.num_nodes)
-    else:
-        # print("This is neither pems03-08, metr_la nor pems_bay dataset!!!")
-        # return
-        predefined_A = None
 
     train_loader = dataloader['train_loader']
     val_loader = dataloader['val_loader']
     test_loader = dataloader['test_loader']
     scaler = dataloader['scaler']
-
-    # predefined_A = load_adj(args.adj_file)
 
     model = get_model(args)
     args.model_class = model.__class__
@@ -61,8 +46,7 @@ def main():
     ic(len(val_loader))
     ic(len(test_loader))
     trainer = Trainer(args, model, scaler, scaler, scaler)
-    trainer.fit(args, train_loader, val_loader, test_loader, ref_adj=ref_adj, epochs=args.epochs)
-    # test(args, model, test_loader, scaler)
+    trainer.fit(args, train_loader, val_loader, test_loader, epochs=args.epochs)
 
     print("args:", args)
 

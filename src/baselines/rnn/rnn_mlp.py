@@ -45,15 +45,15 @@ class RNN_MLP(RNNBaseModel):
         h0 = h0.to(self.device)
 
         self.rnn.flatten_parameters()
-        _, h_out = self.rnn(x, h0)
-        h_out = h_out[-1]
+        _, (hn, cn) = self.rnn(x, h0)
+        h_out = hn[-1]
         h_out = h_out.view(batch_size, self.hidden_dim)
 
         out = self.fc(h_out)
         out = out.view(batch_size, self.output_len, self.output_dim)
         out = out.unsqueeze(-1)
 
-        return out, None
+        return out
 
 
 class LSTM_MLP(RNNBaseModel):
@@ -72,14 +72,15 @@ class LSTM_MLP(RNNBaseModel):
         c0 = c0.to(self.device)
 
         self.rnn.flatten_parameters()
-        _, h_out = self.rnn(x, (h0, c0))
-        h_out = h_out[0][-1]
+        _, (hn, cn) = self.rnn(x, (h0, c0))
+        h_out = hn[-1]
         h_out = h_out.view(-1, self.hidden_dim)
+
         out = self.fc(h_out)
         out = out.view(batch_size, self.output_len, self.output_dim)
         out = out.unsqueeze(-1)
 
-        return out, None
+        return out
 
 class GRU_MLP(RNNBaseModel):
 
@@ -95,15 +96,15 @@ class GRU_MLP(RNNBaseModel):
         h0 = h0.to(self.device)
 
         self.rnn.flatten_parameters()
-        _, h_out = self.rnn(x, h0)
-        h_out = h_out[-1]
+        _, hn = self.rnn(x, h0)
+        h_out = hn[-1]
         h_out = h_out.view(-1, self.hidden_dim)
 
         out = self.fc(h_out)
         out = out.view(batch_size, self.output_len, self.output_dim)
         out = out.unsqueeze(-1)
 
-        return out, None
+        return out
 
 
 class ResRNN_Cell(nn.Module):

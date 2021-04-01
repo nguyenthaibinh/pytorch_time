@@ -94,7 +94,6 @@ class MTGNN(BaseModel):
     def get_static_adj(self):
         return self.static_adj
 
-
     def forward(self, input, idx=None):
         # input: B, C, N, T
         seq_len = input.size(3)
@@ -146,8 +145,7 @@ class MTGNN(BaseModel):
         x = F.relu(skip)
         x = F.relu(self.end_conv_1(x))
         x = self.end_conv_2(x)      # B, T, N, 1
-        A = self.static_adj.view(self.num_nodes * self.num_nodes)
-        return x, A
+        return x
 
 def get_model(args, adj_matrix):
     # adj = th.tensor(adj, dtype=th.float, requires_grad=False)

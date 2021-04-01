@@ -122,13 +122,13 @@ def get_basic_parser():
     parser.add_argument('--log-prediction', type=eval, default=True)
     # data
     parser.add_argument('--in-dim', type=int)
+    parser.add_argument('--out-dim', type=int, default=1)
     parser.add_argument('--normalizer', type=str, default="std")
     parser.add_argument('--column-wise', type=eval, default=False)
     parser.add_argument('--tod', default=False, type=eval)
     parser.add_argument('--eval-on', type=str, default='original', help="Evaluate on normalized data or original data")
     # model
     parser.add_argument('--no-gcn', action='store_true', default=False, help='whether to add graph convolution layer')
-    parser.add_argument('--adj-type', type=str, default='asymmetric', help='symmetric | asymmetric')
     parser.add_argument('--load-static-feature', type=eval, default=False, help='whether to load static feature')
     parser.add_argument('--gcn-depth', type=int, default=2, help='graph convolution depth')
     parser.add_argument('--dropout', type=int, default=0.3)
@@ -160,7 +160,6 @@ def get_basic_parser():
     parser.add_argument('--weight-decay', type=float, default=0.0001, help='weight decay for optimizer')
     parser.add_argument('--optimizer', type=str, default='Adam')
     parser.add_argument('--real-value', default=True, type=eval, help='use real value for loss calculation')
-    parser.add_argument('--graph-regularization', type=eval, default=True, help='Attend both sides or one-side.')
 
     return parser
 
@@ -175,7 +174,8 @@ def process_args(args):
     args.num_nodes = conf['num_nodes']
     if args.in_dim is None:
         args.in_dim = conf['in_dim']
-    args.out_dim = conf['out_dim']
+    if args.out_dim is None:
+        args.out_dim = conf['out_dim']
     args.window = conf['window']
     args.out_len = conf['output_length']
     args.horizon = conf['horizon']

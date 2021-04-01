@@ -34,8 +34,9 @@ def calculate_reverse_random_walk_matrix(adj_mx):
 
 def calculate_scaled_laplacian(adj_mx, lambda_max=2, undirected=True):
     if undirected:
+        adj_mx = np.maximum(adj_mx, adj_mx.T)
         # adj_mx = np.maximum.reduce([adj_mx, adj_mx.T])
-        adj_mx = np.tril(adj_mx) + np.tril(adj_mx, -1).T
+        # adj_mx = np.tril(adj_mx) + np.tril(adj_mx, -1).T
     L = calculate_normalized_laplacian(adj_mx)
     if lambda_max is None:
         lambda_max, _ = linalg.eigsh(L, 1, which='LM')

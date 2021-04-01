@@ -2,9 +2,8 @@ from pathlib import Path
 import torch as th
 from baselines.dcrnn.dcrnn import get_model
 from utils import print_model_parameters
-from utils import ConfigLoader, get_root_dir, get_hostname, get_this_filepath, get_this_filename, get_basic_parser, \
-    process_args
-from datasets.data_loader import load_dataset, load_adj, load_pems_adj, get_normalized_adj
+from utils import get_root_dir, get_this_filepath, get_this_filename, get_basic_parser, process_args
+from datasets.data_loader import load_dataset, load_adj, load_pems_adj
 from trainer import Trainer
 from icecream import ic
 import numpy as np
@@ -24,32 +23,30 @@ def main():
     args.run_file_path = get_this_filepath()
 
     root_dir = get_root_dir()
-    args.model_dir = Path(root_dir, 'src/baselines/agcrn')
+    args.model_dir = Path(root_dir, 'src/baselines/dcrnn')
 
     # load dataset
     dataloader = load_dataset(args.data_dir, args.batch_size, args.val_batch_size, args.test_batch_size,
                               normalizer=args.normalizer)
-    ref_adj = None
     if args.dataset in ['metr_la', 'pems_bay']:
         args.adj_file = conf['adj_file']
         A = load_adj(args.adj_file)
-        # A = np.tril(A) + np.tril(A, -1).T
-    elif args.dataset in ['pems03', 'pems04', 'pems07', 'pems08']:
+    elif args.dataset[:6] in ['pems03', 'pems04', 'pems07', 'pems08']:
         args.adj_file = conf['adj_file']
         A = load_pems_adj(args.adj_file, args.num_nodes)
-        A = np.tril(A) + np.tril(A, -1).T
     else:
         A = None
 
+    """
     if A is not None:
+        A = np.tril(A) + np.tril(A, -1).T
         A = th.from_numpy(A)
+    """
 
     train_loader = dataloader['train_loader']
     val_loader = dataloader['val_loader']
     test_loader = dataloader['test_loader']
     scaler = dataloader['scaler']
-
-    # predefined_A = load_adj(args.adj_file)
 
     model = get_model(args, A)
     args.model_class = model.__class__
@@ -63,7 +60,7 @@ def main():
     ic(len(val_loader))
     ic(len(test_loader))
     trainer = Trainer(args, model, scaler, scaler, scaler)
-    trainer.fit(args, train_loader, val_loader, test_loader, ref_adj=ref_adj, epochs=args.epochs)
+    trainer.fit(args, train_loader, val_loader, test_loader, epochs=args.epochs)
     # test(args, model, test_loader, scaler)
 
     print("args:", args)

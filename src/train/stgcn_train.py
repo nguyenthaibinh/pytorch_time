@@ -30,12 +30,11 @@ def main():
     # load dataset
     dataloader = load_dataset(args.data_dir, args.batch_size, args.val_batch_size, args.test_batch_size,
                               normalizer=args.normalizer)
-    ref_adj = None
     if args.dataset in ['metr_la', 'pems_bay']:
         args.adj_file = conf['adj_file']
         A = load_adj(args.adj_file)
         A = get_normalized_adj(A)
-    elif args.dataset in ['pems03', 'pems04', 'pems07', 'pems08']:
+    elif args.dataset[:6] in ['pems03', 'pems04', 'pems07', 'pems08']:
         args.adj_file = conf['adj_file']
         A = load_pems_adj(args.adj_file, args.num_nodes)
         A = get_normalized_adj(A)
@@ -64,7 +63,7 @@ def main():
     ic(len(val_loader))
     ic(len(test_loader))
     trainer = Trainer(args, model, scaler, scaler, scaler)
-    trainer.fit(args, train_loader, val_loader, test_loader, ref_adj=ref_adj, epochs=args.epochs)
+    trainer.fit(args, train_loader, val_loader, test_loader, epochs=args.epochs)
     # test(args, model, test_loader, scaler)
 
     print("args:", args)

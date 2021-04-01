@@ -71,7 +71,7 @@ class LSTNet(nn.Module):
 
         if self.output:
             res = self.output(res)
-        return res, None
+        return res
 
 def get_model(args):
     # adj = th.tensor(adj, dtype=th.float, requires_grad=False)

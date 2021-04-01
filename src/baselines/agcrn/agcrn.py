@@ -71,7 +71,7 @@ class AGCRN(BaseModel):
         output = output.squeeze(-1).reshape(-1, self.out_len, self.output_dim, self.num_node)
         output = output.permute(0, 1, 3, 2)                             #B, T, N, C
 
-        return output, None
+        return output
 
 def get_model(args):
     model = AGCRN(args)

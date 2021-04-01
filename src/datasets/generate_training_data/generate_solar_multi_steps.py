@@ -39,7 +39,7 @@ def _batchify(data, idx_set, M, window, horizon):
 def generate_train_val_test(args):
     data_file = args.data_file
     out_dir = args.out_dir
-    cfg_file = Path(args.cfg_dir, f'{dataset_name}.yaml')
+    cfg_file = Path(args.cfg_dir, f'{args.dataset_name}.yaml')
     ic(cfg_file)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     Path(args.cfg_dir).mkdir(parents=True, exist_ok=True)
@@ -92,20 +92,15 @@ def generate_train_val_test(args):
 
     f.close()
 
-def main(args):
-    print("Generating training data")
-    generate_train_val_test(args)
-
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
-    dataset = 'solar'
+    dataset = 'electricity'
     data_file = f'/home/nbinh/datasets/time_series/{dataset}/{dataset}.txt'
     parser.add_argument("--data-file", type=str, default=data_file, help="Raw traffic readings.")
     parser.add_argument("--train-ratio", type=float, default=0.6)
     parser.add_argument("--val-ratio", type=float, default=0.2)
     parser.add_argument("--window", type=int, default=24)
-    parser.add_argument("--horizon", type=int, default=3)
+    parser.add_argument("--horizon", type=int, default=24)
     parser.add_argument("--normalizer", type=str, default='None')
     parser.add_argument("--column-wise", type=eval, default=False)
     args = parser.parse_args()
@@ -127,5 +122,9 @@ if __name__ == "__main__":
     args.cfg_dir = Path(get_root_dir(), f'cfg/{dataset}')
 
     ic(args)
+    print("Generating training data")
+    generate_train_val_test(args)
 
-    main(args)
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import scipy.sparse as sp
 
 from baselines.dcrnn import utils
 
@@ -47,7 +48,7 @@ class DCGRUCell(torch.nn.Module):
 
         super().__init__()
         self._activation = torch.tanh if nonlinearity == 'tanh' else torch.relu
-        # support other nonlinearities up here?
+        # support other non-linearities up here?
         self._num_nodes = num_nodes
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step

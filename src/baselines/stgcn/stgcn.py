@@ -124,7 +124,7 @@ class STGCN(nn.Module):
         out4 = self.fully(out3.reshape((out3.shape[0], out3.shape[1], -1)))
         out4 = out4.permute(0, 2, 1).contiguous()
         out4 = out4.unsqueeze(-1)
-        return out4, None
+        return out4
 
 def get_model(args, A):
     model = STGCN(adj_mx=A, in_dim=args.in_dim, seq_len=args.window, out_len=args.out_len)

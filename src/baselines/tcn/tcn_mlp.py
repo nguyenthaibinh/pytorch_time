@@ -30,7 +30,7 @@ class TCN_MLP(nn.Module):
 
         out = out.view(batch_size, self.out_len, self.out_dim)
         out = out.unsqueeze(-1)
-        return out, None
+        return out
 
 def get_model(args):
     model = TCN_MLP(in_dim=args.in_dim * args.num_nodes, hidden_dim=args.hidden_dim, out_dim=args.num_nodes,

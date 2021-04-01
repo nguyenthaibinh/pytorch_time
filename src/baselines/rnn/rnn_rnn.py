@@ -151,7 +151,7 @@ class RNNSeq2Seq(BaseModel):
         out = out.unsqueeze(-1)
         out = out.to(self.device)
 
-        return out, None
+        return out
 
 def get_model(args):
     model = RNNSeq2Seq(input_dim=args.in_dim * args.num_nodes, hidden_dim=args.hidden_dim, output_dim=args.num_nodes,

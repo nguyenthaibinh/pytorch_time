@@ -4,8 +4,6 @@ import torch.nn as nn
 
 from baselines.dcrnn.dcrnn_cell import DCGRUCell
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -15,9 +13,9 @@ class Seq2SeqAttrs:
         self.adj_mx = adj_mx
         self.max_diffusion_step = int(model_kwargs.get('max_diffusion_step', 2))
         self.cl_decay_steps = int(model_kwargs.get('cl_decay_steps', 1000))
-        self.filter_type = model_kwargs.get('filter_type', 'laplacian')
+        self.filter_type = model_kwargs.get('filter_type', 'dual_random_walk')
         # self.num_nodes = int(model_kwargs.get('num_nodes', 1))
-        self.num_nodes = adj_mx.size(0)
+        self.num_nodes = adj_mx.shape[0]
         self.num_rnn_layers = int(model_kwargs.get('num_rnn_layers', 1))
         self.rnn_units = int(model_kwargs.get('rnn_units'))
         self.hidden_state_size = self.num_nodes * self.rnn_units
@@ -29,6 +27,7 @@ class EncoderModel(nn.Module, Seq2SeqAttrs):
         Seq2SeqAttrs.__init__(self, adj_mx, **model_kwargs)
         self.in_dim = int(model_kwargs.get('in_dim', 1))
         self.seq_len = int(model_kwargs.get('seq_len'))  # for the encoder
+        self.device = model_kwargs.get('device', 'cuda')  # for the encoder
         self.dcgru_layers = nn.ModuleList(
             [DCGRUCell(self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
                        filter_type=self.filter_type) for _ in range(self.num_rnn_layers)])
@@ -47,7 +46,7 @@ class EncoderModel(nn.Module, Seq2SeqAttrs):
         batch_size, _ = inputs.size()
         if hidden_state is None:
             hidden_state = torch.zeros((self.num_rnn_layers, batch_size, self.hidden_state_size),
-                                       device=device)
+                                       device=self.device)
         hidden_states = []
         output = inputs
         for layer_num, dcgru_layer in enumerate(self.dcgru_layers):
@@ -102,6 +101,14 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
         self.decoder_model = DecoderModel(adj_mx, **model_kwargs)
         self.cl_decay_steps = int(model_kwargs.get('cl_decay_steps', 1000))
         self.use_curriculum_learning = bool(model_kwargs.get('use_curriculum_learning', False))
+        self.device = model_kwargs.get('device', 'cuda')
+
+    def reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+            else:
+                nn.init.uniform_(p)
 
     def _compute_sampling_threshold(self, batches_seen):
         return self.cl_decay_steps / (
@@ -129,7 +136,7 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
         """
         batch_size = encoder_hidden_state.size(1)
         go_symbol = torch.zeros((batch_size, self.num_nodes * self.decoder_model.out_dim),
-                                device=device)
+                                device=self.device)
         decoder_hidden_state = encoder_hidden_state
         decoder_input = go_symbol
 
@@ -162,17 +169,17 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
         out = self.decoder(encoder_hidden_state, labels, batches_seen=batches_seen)
         out = out.permute(1, 0, 2).contiguous()
         out = out.unsqueeze(-1)
-        return out, None
+        return out
 
 def get_model(args, A):
     model = DCRNNModel(adj_mx=A, in_dim=args.in_dim, rnn_units=args.rnn_units, seq_len=args.window,
-                       out_dim=args.out_dim, out_len=args.out_len)
+                       out_dim=args.out_dim, out_len=args.out_len, num_rnn_layers=args.layers)
 
     if args.load_weights:
         print("Loading pretrained weights...")
         model.load_state_dict(torch.load(f'{args.weigth_path}'))
     else:
         print("Initializing model weights...")
-        # model.reset_parameters()
+        model.reset_parameters()
 
     return model

@@ -59,7 +59,7 @@ class Trainer:
                 self.model = nn.DataParallel(self.model)
         self.model = self.model.to(args.device, dtype=th.float)
 
-    def fit(self, args, train_loader, val_loader, test_loader, ref_adj, epochs):
+    def fit(self, args, train_loader, val_loader, test_loader, epochs):
         self.model = self.model.to(self.device, dtype=th.float)
         mf.set_tracking_uri(uri=self.log_dir)
         mf.set_experiment(experiment_name=self.exp_name)
@@ -67,7 +67,6 @@ class Trainer:
         print("tracking_uri:", self.log_dir)
         print("exp_name:    ", self.exp_name)
 
-        graph_loss = th.nn.BCELoss()
         with mf.start_run() as mf_run:
             mf.log_param('host', get_hostname())
             mf.log_param('run_file_path', args.run_file_path)
@@ -83,10 +82,6 @@ class Trainer:
                 ic(e)
             try:
                 mf.log_param('static_graph', args.static_graph)
-            except Exception as e:
-                ic(e)
-            try:
-                mf.log_param('ref_adj_size', ref_adj.shape)
             except Exception as e:
                 ic(e)
             try:
@@ -129,12 +124,22 @@ class Trainer:
                 mf.log_param('cell', args.cell)
             except Exception as e:
                 ic(e)
+            try:
+                mf.log_param('adj_type', args.cell)
+            except Exception as e:
+                ic(e)
+            try:
+                mf.log_param('multi_gpus', args.multi_gpus)
+            except Exception as e:
+                ic(e)
 
             mf.log_param('kernel_set', args.kernel_set)
             mf.log_param('normalizer', args.normalizer)
             mf.log_param('train_loss', args.train_loss)
-            mf.log_param('adj_type', args.adj_type)
             mf.log_param('layers', args.layers)
+            mf.log_param("in_dim", args.in_dim)
+            mf.log_param("out_dim", args.out_dim)
+            mf.log_param("trainer", get_this_filepath())
             mf.log_param('model', self.model_class)
             mf.log_param('window', args.window)
             mf.log_param('horizon', args.horizon)
@@ -146,45 +151,34 @@ class Trainer:
             mf.log_param("trainer", get_this_filepath())
 
             mf.log_artifact(args.run_file_path)
-            mf.log_artifacts(args.model_dir)
             mf.log_artifact(args.cfg_file_path)
             mf.log_artifact(get_this_filepath())
+            root_dir = get_root_dir()
+            src_dir = Path(root_dir, f'src')
+            mlflow.log_artifacts(src_dir, artifact_path="src")
 
             min_val_mae = np.inf
             not_improved_count = 0
             best_state_dict = None
 
-            lr_scheduler = th.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=args.steps,
-                                                             gamma=float(args.lr_decay_ratio))
-            if ref_adj is not None:
-                ref_adj = th.Tensor(ref_adj).to(args.device)
-                true_ref_graph = ref_adj.view(ref_adj.shape[0] * ref_adj.shape[1])
-
             for epoch in range(1, epochs + 1):
                 start = timer()
                 epoch_loss = []
                 self.model.train()
-                # lr = adjust_lr(args, self.optimizer, epoch)
-                # lr = lr_scheduler.get_last_lr()[0]
                 lr = adjust_lr(args, self.optimizer, epoch)
                 for i, (input, target) in enumerate(train_loader):
                     input = input[..., :args.in_dim]         # B, T, N, C   (scaled data)
-                    input = input.permute(0, 3, 2, 1)       # B, C, N, T
+                    input = input.permute(0, 3, 2, 1).contiguous()     # B, C, N, T
                     target = target[..., :args.out_dim]     # B, T, N, 1   (raw data)
                     input = input.to(args.device, dtype=th.float)
                     target = target.to(args.device, dtype=th.float)
                     self.optimizer.zero_grad()
 
-                    preds, graph_preds = self.model(input)               # B, T, N, 1
+                    preds = self.model(input)               # B, T, N, 1
 
                     preds = self.train_scaler.inverse_transform(preds)    # scale to raw data to compare with target
 
-                    if args.graph_regularization and ref_adj is not None:
-                        loss_pred = self.loss(preds, target, 0.0)
-                        loss_g = graph_loss(graph_preds, true_ref_graph)
-                        loss = loss_pred + loss_g
-                    else:
-                        loss = self.loss(preds, target, 0.0)
+                    loss = self.loss(preds, target, 0.0)
 
                     loss.backward()
 
@@ -197,7 +191,6 @@ class Trainer:
                     if self.debug and i == 4:
                         ic("Run only five mini-batches in debug mode!")
                         break
-                # lr_scheduler.step()
                 end = timer()
                 elapsed_time = end - start
                 epoch_loss = np.asarray(epoch_loss)
@@ -344,11 +337,11 @@ def evaluate(args, model, data_loader, scaler, device, real_value=True):
     with th.no_grad():
         for batch_idx, (input, target) in enumerate(data_loader):
             input = input[..., :args.in_dim]            # B, T, N, C   (scaled data)
-            input = input.permute(0, 3, 2, 1)           # B, C, N, T
+            input = input.permute(0, 3, 2, 1).contiguous()           # B, C, N, T
             target = target[..., :args.out_dim]         # B, T, N, 1   (raw data)
             input = input.to(device, dtype=th.float)
             target = target.to(device, dtype=th.float)
-            preds, _ = model(input)                        # B, T, N, 1    (scaled data)
+            preds = model(input)                        # B, T, N, 1    (scaled data)
             y_true.append(target)
             y_pred.append(preds)
 

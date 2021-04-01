@@ -10,13 +10,13 @@ class nconv(nn.Module):
     def __init__(self):
         super(nconv,self).__init__()
 
-    def forward(self,x, A):
-        x = th.einsum('ncvl,vw->ncwl',(x,A))
+    def forward(self, x, A):
+        x = th.einsum('ncvl,vw->ncwl', (x, A))
         return x.contiguous()
 
 class linear(nn.Module):
     def __init__(self,c_in,c_out):
-        super(linear,self).__init__()
+        super(linear, self).__init__()
         self.mlp = th.nn.Conv2d(c_in, c_out, kernel_size=(1, 1), padding=(0,0), stride=(1,1), bias=True)
 
     def forward(self, x):
@@ -184,18 +184,14 @@ class GWNET(BaseModel):
 
             x = self.bn[i](x)
 
-        x = F.relu(skip)
-        x = F.relu(self.end_conv_1(x))
-        x = self.end_conv_2(x)
-        return x, None
+        out = F.relu(skip)
+        out = F.relu(self.end_conv_1(out))
+        out = self.end_conv_2(out)
+        return out
 
-def get_model(args, adj_matrix):
-    # adj = th.tensor(adj, dtype=th.float, requires_grad=False)
-    # adj = adj.to(args.device)
-    if adj_matrix is not None:
-        adj_mx = np.tril(adj_matrix) + np.tril(adj_matrix, -1).T
-        adj_mx = normalize_adj(adj_mx, args.adj_type)
-        supports = [th.tensor(i).to(args.device) for i in adj_mx]
+def get_model(args, A):
+    if A is not None:
+        supports = [th.tensor(i).to(args.device) for i in A]
 
         if args.random_adj:
             adj_init = None
@@ -222,6 +218,5 @@ def get_model(args, adj_matrix):
     else:
         print("Initializing baselines weights...")
         model.reset_parameters()
-        # model.apply(weights_init)
 
     return model
