@@ -28,7 +28,7 @@ tensor_log/*
 !results/.gitkeep
 !docs/.gitkeep
 !cfg/.gitkeep
-
+!cfg/bitcoin/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
