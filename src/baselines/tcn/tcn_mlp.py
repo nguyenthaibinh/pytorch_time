@@ -8,7 +8,8 @@ class TCN_MLP(nn.Module):
         self.out_dim = out_dim
         self.out_len = out_len
         num_channels = [hidden_dim] * num_layers
-        self.tcn = TemporalConvNet(in_dim, num_channels, kernel_size, dropout=dropout)
+        self.embeddings = nn.Conv1d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0)
+        self.tcn = TemporalConvNet(hidden_dim, num_channels, kernel_size, dropout=dropout)
         self.fc = nn.Linear(hidden_dim, out_dim * out_len)
         # self.sig = nn.Sigmoid()
 
@@ -24,6 +25,7 @@ class TCN_MLP(nn.Module):
         batch_size, C, N, T = x.size()
         # x needs to have dimension (N, C, L) in order to be passed into CNN
         x = x.view(batch_size, C * N, T).contiguous()    # B, C * N, T
+        x = self.embeddings(x)
         out = self.tcn(x).transpose(1, 2)
         out = out[:, -1, :]
         out = self.fc(out)

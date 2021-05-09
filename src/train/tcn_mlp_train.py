@@ -9,8 +9,8 @@ from trainer import Trainer
 from icecream import ic
 
 def add_arguments(parser):
-    parser.add_argument('--hidden-dim', type=int, default=128, help='Dimensionality of the rnn hidden layers.')
-    parser.add_argument('--kernel-size', type=int, default=3)
+    parser.add_argument('--hidden-dim', type=int, default=64, help='Dimensionality of the rnn hidden layers.')
+    parser.add_argument('--kernel-size', type=int, default=5)
     return parser
 
 def main():

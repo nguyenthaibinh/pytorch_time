@@ -18,7 +18,6 @@ def calculate_normalized_laplacian(adj):
     normalized_laplacian = sp.eye(adj.shape[0]) - adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
     return normalized_laplacian
 
-
 def calculate_random_walk_matrix(adj_mx):
     adj_mx = sp.coo_matrix(adj_mx)
     d = np.array(adj_mx.sum(1))
@@ -45,4 +44,5 @@ def calculate_scaled_laplacian(adj_mx, lambda_max=2, undirected=True):
     M, _ = L.shape
     I = sp.identity(M, format='csr', dtype=L.dtype)
     L = (2 / lambda_max * L) - I
+    L = L.toarray()
     return L.astype(np.float32)

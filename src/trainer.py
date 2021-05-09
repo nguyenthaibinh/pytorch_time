@@ -132,6 +132,10 @@ class Trainer:
                 mf.log_param('multi_gpus', args.multi_gpus)
             except Exception as e:
                 ic(e)
+            try:
+                mf.log_param('clip', args.clip)
+            except Exception as e:
+                ic(e)
 
             mf.log_param('kernel_set', args.kernel_set)
             mf.log_param('normalizer', args.normalizer)
@@ -144,6 +148,7 @@ class Trainer:
             mf.log_param('window', args.window)
             mf.log_param('horizon', args.horizon)
             mf.log_param('out_len', args.out_len)
+            mf.log_param("batch_size", args.batch_size)
             mf.log_param('clip', args.clip)
             mf.log_param('lr_init', args.lr_init)
             mf.log_param('weight_decay', args.weight_decay)
@@ -161,11 +166,15 @@ class Trainer:
             not_improved_count = 0
             best_state_dict = None
 
+            num_batches = len(train_loader)
+            batches_seen = num_batches * epochs
+
             for epoch in range(1, epochs + 1):
                 start = timer()
                 epoch_loss = []
                 self.model.train()
                 lr = adjust_lr(args, self.optimizer, epoch)
+
                 for i, (input, target) in enumerate(train_loader):
                     input = input[..., :args.in_dim]         # B, T, N, C   (scaled data)
                     input = input.permute(0, 3, 2, 1).contiguous()     # B, C, N, T
@@ -173,6 +182,10 @@ class Trainer:
                     input = input.to(args.device, dtype=th.float)
                     target = target.to(args.device, dtype=th.float)
                     self.optimizer.zero_grad()
+
+                    B, T, _, _ = target.size()
+                    labels = target.permute(1, 0, 2, 3).contiguous()
+                    labels = labels.view(T, B, -1)
 
                     preds = self.model(input)               # B, T, N, 1
 
@@ -200,7 +213,10 @@ class Trainer:
                 val_rmse = val_loss['rmse']
                 val_mape = val_loss['mape']
 
-                if val_mae < min_val_mae:
+                if val_mae <= 0.0:
+                    break
+
+                if min_val_mae > val_mae > 0.0:
                     min_val_mae = val_mae
                     mf.log_metric("best_val_mae", val_loss['mae'])
                     mf.log_metric("best_val_rmse", val_loss['rmse'])

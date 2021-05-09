@@ -12,6 +12,9 @@ from datasets.generate_training_data.generate_pems_data import split_data_by_rat
 from datasets.data_utils import normalize_dataset
 from utils import get_root_dir
 from icecream import ic
+from matplotlib.dates import strpdate2num
+from datetime import datetime as dt
+import pandas as pd
 
 def split(data, train_ratio, valid_ratio, window, horizon):
     N, M = data.shape
@@ -44,9 +47,14 @@ def generate_train_val_test(args):
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     Path(args.cfg_dir).mkdir(parents=True, exist_ok=True)
 
-    fin = open(data_file)
-    data = np.loadtxt(fin, delimiter=',')       # (52560, 137)
-    data = np.expand_dims(data, axis=2)
+    df = pd.read_csv(data_file, header=None, names=['datetime_str', 'price'])
+    df['ts'] = df['datetime_str'].apply(lambda x: pd.Timestamp(x))
+    # df['date_time'] = df['ts'].apply(lambda x: dt.fromtimestamp(x).strftime('%Y-%m-%d'))
+    print(df.head())
+
+    data = df[['price', 'ts']].to_numpy()
+
+    data = np.expand_dims(data, axis=1)
 
     data, _ = normalize_dataset(data, normalizer=args.normalizer, column_wise=args.column_wise)
 
@@ -79,10 +87,10 @@ def generate_train_val_test(args):
     print(f'\ndata_dir: \"{out_dir}\"', file=f)
     print(f'normalized: {args.normalizer}', file=f)
     print(f'column_wise: {str(args.column_wise)}', file=f)
-    print(f'mean/std:           {data.mean():.4f}/{data.std():.4f}', file=f)
-    print(f'train_mean/std:     {x_train.mean():.4f}/{x_train.std():.4f}', file=f)
-    print(f'val_mean/std:       {x_val.mean():.4f}/{x_val.std():.4f}', file=f)
-    print(f'test_mean/std:      {x_test.mean():.4f}/{x_test.std():.4f}', file=f)
+    print(f'mean/std:           {data[:, :, 0].mean():.2f}/{data[:, :, 0].std():.2f}', file=f)
+    print(f'train_mean/std:     {x_train[:, :, :, 0].mean():.2f}/{x_train[:, :, :, 0].std():.2f}', file=f)
+    print(f'val_mean/std:       {x_val[:, :, :, 0].mean():.2f}/{x_val[:, :, :, 0].std():.2f}', file=f)
+    print(f'test_mean/std:      {x_test[:, :, :, 0].mean():.2f}/{x_test[:, :, :, 0].std():.2f}', file=f)
     print(f'num_nodes: {x_train.shape[2]}', file=f)
     print(f'channels: {x_train.shape[3]}', file=f)
     print(f'in_dim: {x_train.shape[-1]}', file=f)
@@ -95,13 +103,15 @@ def generate_train_val_test(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    dataset = 'electricity'
-    data_file = f'/home/nbinh/datasets/time_series/{dataset}/{dataset}.txt'
+    dataset = 'bitcoin'
+    filename = 'btc_price_20210419.csv'
+    data_root = f'/home/nbinh/datasets/time_series/{dataset}'
+    data_file = str(Path(data_root, filename))
     parser.add_argument("--data-file", type=str, default=data_file, help="Raw traffic readings.")
-    parser.add_argument("--train-ratio", type=float, default=0.6)
-    parser.add_argument("--val-ratio", type=float, default=0.2)
+    parser.add_argument("--train-ratio", type=float, default=0.7)
+    parser.add_argument("--val-ratio", type=float, default=0.1)
     parser.add_argument("--window", type=int, default=24)
-    parser.add_argument("--horizon", type=int, default=3)
+    parser.add_argument("--horizon", type=int, default=12)
     parser.add_argument("--normalizer", type=str, default='None')
     parser.add_argument("--column-wise", type=eval, default=False)
     args = parser.parse_args()
@@ -117,7 +127,7 @@ def main():
     else:
         dataset_name = f'{Path(data_file).stem}_scaled_{args.normalizer}_{args.window}x{args.horizon}_split_{split}'
 
-    out_dir = Path(f'/home/nbinh/datasets/time_series/{dataset}/', dataset_name)
+    out_dir = Path(data_root, dataset_name)
     args.dataset_name = dataset_name
     args.out_dir = out_dir
     args.cfg_dir = Path(get_root_dir(), f'cfg/{dataset}')

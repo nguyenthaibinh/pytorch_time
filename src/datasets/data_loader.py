@@ -11,8 +11,10 @@ from datasets.normalization import StandardScaler, MinMax01Scaler, MinMax11Scale
 from datasets.data_utils import normalize_dataset
 import csv
 
+
 def normal_std(x):
     return x.std() * np.sqrt((len(x) - 1.) / (len(x)))
+
 
 def sym_adj(adj):
     """Symmetrically normalize adjacency matrix."""
@@ -76,9 +78,11 @@ def load_pickle(pickle_file):
         raise
     return pickle_data
 
+
 def load_adj(pkl_filename):
     sensor_ids, sensor_id_to_ind, adj = load_pickle(pkl_filename)
     return adj
+
 
 def load_pems_adj(distance_df_filename, num_of_vertices):
     '''
@@ -100,10 +104,12 @@ def load_pems_adj(distance_df_filename, num_of_vertices):
 
     for i, j in edges:
         A[i, j] = 1
+        A[j, i] = 1
 
     # A = np.reshape(num_of_vertices, num_of_vertices)
 
     return A
+
 
 def get_normalized_adj(A):
     """
@@ -112,30 +118,39 @@ def get_normalized_adj(A):
     A = np.tril(A) + np.tril(A, -1).T
     A_hat = A + np.diag(np.ones(A.shape[0], dtype=np.float32))
     D = np.array(np.sum(A_hat, axis=1)).reshape((-1,))
-    D[D <= 10e-5] = 10e-5    # Prevent infs
+    D[D <= 10e-5] = 10e-5  # Prevent infs
     diag = np.reciprocal(np.sqrt(D))
     A_wave = np.multiply(np.multiply(diag.reshape((-1, 1)), A_hat),
                          diag.reshape((1, -1)))
     return A_wave
 
+
 def data_loader(X, Y, batch_size, shuffle=True, drop_last=True):
     # cuda = True if torch.cuda.is_available() else False
     # TensorFloat = torch.cuda.FloatTensor if cuda else torch.FloatTensor
     # X, Y = TensorFloat(X), TensorFloat(Y)
+    X = X.astype(float)
+    Y = Y.astype(float)
     X, Y = FloatTensor(X), FloatTensor(Y)
     data = torch.utils.data.TensorDataset(X, Y)
     dataloader = torch.utils.data.DataLoader(data, batch_size=batch_size,
                                              shuffle=shuffle, drop_last=drop_last)
     return dataloader
 
-def load_dataset(dataset_dir, batch_size, valid_batch_size=None, test_batch_size=None, mean=None, std=None,
-                 column_wise=False, normalizer='std', normalize_all=True):
+
+def load_dataset(dataset_dir, batch_size, in_dim, out_dim, valid_batch_size=None, test_batch_size=None,
+                 mean=None, std=None, column_wise=False, normalizer='std', debug=False):
     data = {}
     data_all = []
     for category in ['train', 'val', 'test']:
-        cat_data = np.load(os.path.join(dataset_dir, category + '.npz'))
-        data['x_' + category] = cat_data['x']
-        data['y_' + category] = cat_data['y']
+        cat_data = np.load(os.path.join(dataset_dir, category + '.npz'), allow_pickle=True)
+
+        if not debug:
+            data['x_' + category] = cat_data['x'][:, :, :, :in_dim]
+            data['y_' + category] = cat_data['y'][:, :, :, :out_dim]
+        else:
+            data['x_' + category] = cat_data['x'][:100]
+            data['y_' + category] = cat_data['y'][:100]
 
     if mean is None:
         _, scaler = normalize_dataset(data['x_train'][..., 0], normalizer=normalizer, column_wise=column_wise)
@@ -161,6 +176,41 @@ def load_dataset(dataset_dir, batch_size, valid_batch_size=None, test_batch_size
     ic(data['x_test'].shape)
     ic(data['y_test'].shape)
     return data
+
+
+def load_var_dataset(dataset_dir, normalizer='std', mean=None, std=None, column_wise=False, debug=False):
+    data = {}
+    data_all = []
+    train_data = np.load(os.path.join(dataset_dir, 'train_no_split.npz'))['x']
+    if debug:
+        train_data = train_data[:100]
+
+    for category in ['val', 'test']:
+        cat_data = np.load(os.path.join(dataset_dir, category + '.npz'))
+
+        if not debug:
+            data['x_' + category] = cat_data['x']
+            data['y_' + category] = cat_data['y']
+        else:
+            data['x_' + category] = cat_data['x'][:100]
+            data['y_' + category] = cat_data['y'][:100]
+
+    if mean is None:
+        _, scaler = normalize_dataset(train_data[..., 0], normalizer=normalizer, column_wise=column_wise)
+    else:
+        scaler = StandardScaler(mean=mean, std=std)
+
+    data['train_data'] = scaler.transform(train_data)
+
+    # Data format
+    for category in ['val', 'test']:
+        data['x_' + category][..., 0] = scaler.transform(data['x_' + category][..., 0])
+
+    # data['scaler'] = scaler
+    data['scaler'] = scaler
+
+    return data
+
 
 def load_node_feature(path):
     fi = open(path)

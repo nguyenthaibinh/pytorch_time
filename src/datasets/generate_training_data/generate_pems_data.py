@@ -108,6 +108,8 @@ def generate_train_val_test(args):
     x_val, y_val = add_window_horizon(data_val, window=args.window, horizon=args.horizon)
     x_test, y_test = add_window_horizon(data_test, window=args.window, horizon=args.horizon)
 
+    train_npz_path = Path(args.out_dir, 'train_no_split.npz')
+    np.savez(train_npz_path, x=data_train)
     train_npz_path = Path(args.out_dir, 'train.npz')
     np.savez(train_npz_path, x=x_train, y=y_train)
     val_npz_path = Path(args.out_dir, 'val.npz')

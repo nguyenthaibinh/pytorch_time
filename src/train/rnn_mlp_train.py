@@ -26,8 +26,8 @@ def main():
     args.model_dir = Path(root_dir, 'src/baselines/rnn')
 
     # load dataset
-    dataloader = load_dataset(args.data_dir, args.batch_size, args.val_batch_size, args.test_batch_size,
-                              normalizer=args.normalizer)
+    dataloader = load_dataset(args.data_dir, args.batch_size, args.in_dim, args.out_dim, args.val_batch_size,
+                              args.test_batch_size, normalizer=args.normalizer)
 
     train_loader = dataloader['train_loader']
     val_loader = dataloader['val_loader']

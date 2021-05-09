@@ -13,7 +13,7 @@ class Seq2SeqAttrs:
         self.adj_mx = adj_mx
         self.max_diffusion_step = int(model_kwargs.get('max_diffusion_step', 2))
         self.cl_decay_steps = int(model_kwargs.get('cl_decay_steps', 1000))
-        self.filter_type = model_kwargs.get('filter_type', 'dual_random_walk')
+        self.filter_type = model_kwargs.get('filter_type', 'laplacian')
         # self.num_nodes = int(model_kwargs.get('num_nodes', 1))
         self.num_nodes = adj_mx.shape[0]
         self.num_rnn_layers = int(model_kwargs.get('num_rnn_layers', 1))
@@ -28,9 +28,21 @@ class EncoderModel(nn.Module, Seq2SeqAttrs):
         self.in_dim = int(model_kwargs.get('in_dim', 1))
         self.seq_len = int(model_kwargs.get('seq_len'))  # for the encoder
         self.device = model_kwargs.get('device', 'cuda')  # for the encoder
+        self.dcgru_layers = nn.ModuleList()
+        self.dcgru_layers.append(
+            DCGRUCell(self.in_dim, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+                      filter_type=self.filter_type)
+        )
+        for _ in range(self.num_rnn_layers - 1):
+            self.dcgru_layers.append(
+                DCGRUCell(self.rnn_units, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+                          filter_type=self.filter_type)
+            )
+        """
         self.dcgru_layers = nn.ModuleList(
-            [DCGRUCell(self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+            [DCGRUCell(self.in_dim, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
                        filter_type=self.filter_type) for _ in range(self.num_rnn_layers)])
+        """
 
     def forward(self, inputs, hidden_state=None):
         """
@@ -62,12 +74,25 @@ class DecoderModel(nn.Module, Seq2SeqAttrs):
         # super().__init__(is_training, adj_mx, **model_kwargs)
         nn.Module.__init__(self)
         Seq2SeqAttrs.__init__(self, adj_mx, **model_kwargs)
+        self.in_dim = int(model_kwargs.get('in_dim', 1))
         self.out_dim = int(model_kwargs.get('out_dim', 1))
         self.horizon = int(model_kwargs.get('out_len', 1))  # for the decoder
         self.projection_layer = nn.Linear(self.rnn_units, self.out_dim)
+        self.dcgru_layers = nn.ModuleList()
+        self.dcgru_layers.append(
+            DCGRUCell(self.out_dim, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+                      filter_type=self.filter_type)
+        )
+        for _ in range(self.num_rnn_layers - 1):
+            self.dcgru_layers.append(
+                DCGRUCell(self.rnn_units, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+                          filter_type=self.filter_type)
+            )
+        """
         self.dcgru_layers = nn.ModuleList(
-            [DCGRUCell(self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
+            [DCGRUCell(self.out_dim, self.rnn_units, adj_mx, self.max_diffusion_step, self.num_nodes,
                        filter_type=self.filter_type) for _ in range(self.num_rnn_layers)])
+        """
 
     def forward(self, inputs, hidden_state=None):
         """
@@ -165,6 +190,12 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
         B, C, N, T = x.size()
         x = x.permute(3, 0, 1, 2).contiguous()
         x = x.view(T, B, -1)
+
+        if labels is not None:
+            l_b, l_c, l_n, l_t = labels.size()
+            labels = labels.permute(3, 0, 1, 2).contiguous()
+            labels = labels.view(l_t, l_b, -1)
+
         encoder_hidden_state = self.encoder(x)
         out = self.decoder(encoder_hidden_state, labels, batches_seen=batches_seen)
         out = out.permute(1, 0, 2).contiguous()
