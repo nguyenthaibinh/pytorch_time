@@ -1,0 +1,21 @@
+dataset: btc_price_original_24x12_split_6x2x2
+# full data shape:  (44613, 1, 2)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (26733, 24, 1, 2),   y.shape:    (26733, 12, 1, 2)
+# val x.shape:      (8888, 24, 1, 2),     y.shape:    (8888, 12, 1, 2)
+# test x.shape:     (8887, 24, 1, 2),    y.shape:    (8887, 12, 1, 2)
+
+data_dir: "/home/nbinh/datasets/time_series/bitcoin/btc_price_original_24x12_split_6x2x2"
+normalized: None
+column_wise: False
+mean/std:           1326505050.15/94075959.75
+train_mean/std:     1295668202.43/104635951.87
+val_mean/std:       1378829115.18/41475805.02
+test_mean/std:      1366841323.87/48849823.99
+num_nodes: 1
+channels: 2
+in_dim: 1
+out_dim: 1
+window: 24
+horizon: 12
+output_length: 12
