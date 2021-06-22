@@ -103,11 +103,10 @@ def generate_train_val_test(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    dataset = 'bitcoin'
     filename = 'btc_price_20210419.csv'
-    data_root = f'/home/nbinh/datasets/time_series/{dataset}'
-    data_file = str(Path(data_root, filename))
-    parser.add_argument("--data-file", type=str, default=data_file, help="Raw traffic readings.")
+    data_dir = f'/home/nbinh/datasets/time_series/bitcoin'
+    parser.add_argument("--data-dir", type=str, default=data_dir, help="Path to the data directory.")
+    parser.add_argument("--filename", type=str, default=filename, help="Name of the data file.")
     parser.add_argument("--train-ratio", type=float, default=0.7)
     parser.add_argument("--val-ratio", type=float, default=0.1)
     parser.add_argument("--window", type=int, default=24)
@@ -115,6 +114,11 @@ def main():
     parser.add_argument("--normalizer", type=str, default='None')
     parser.add_argument("--column-wise", type=eval, default=False)
     args = parser.parse_args()
+
+    dataset = Path(args.data_dir).stem
+    filename = args.filename
+    data_dir = args.data_dir
+    data_file = str(Path(data_dir, filename))
 
     train_ratio = int(args.train_ratio * 10)
     val_ratio = int(args.val_ratio * 10)
@@ -127,7 +131,7 @@ def main():
     else:
         dataset_name = f'{Path(data_file).stem}_scaled_{args.normalizer}_{args.window}x{args.horizon}_split_{split}'
 
-    out_dir = Path(data_root, dataset_name)
+    out_dir = Path(data_dir, dataset_name)
     args.dataset_name = dataset_name
     args.out_dir = out_dir
     args.cfg_dir = Path(get_root_dir(), f'cfg/{dataset}')
