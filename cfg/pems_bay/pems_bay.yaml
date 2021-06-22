@@ -1,0 +1,17 @@
+dataset: pems_bay
+# full data shape:  (52093, 12, 325, 2)     (B, T, N, C)
+# train/val/set: 7/1/2
+# train x, y.shape: (36465, 12, 325, 2)
+# val x, y.shape:   (5209, 12, 325, 2)
+# test x, y.shape:  (10419, 12, 325, 2)
+
+data_dir: "/home/nbinh/datasets/traffic_flow/pems_bay"
+adj_file: "/home/nbinh/datasets/traffic_flow/pems_bay/adj_mx_bay.pkl"
+
+num_nodes: 325
+channels: 2
+in_dim: 2
+out_dim: 1
+window: 12
+horizon: 12
+output_length: 12

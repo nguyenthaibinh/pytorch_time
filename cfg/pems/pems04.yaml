@@ -1,0 +1,18 @@
+dataset: pems04
+# full data shape:  (16992, 307, 3)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x, y.shape: (10173, 12, 307, 3)
+# val x, y.shape:   (3375, 12, 307, 3)
+# test x, y.shape:  (3375, 12, 307, 3)
+
+data_dir: "/home/nbinh/datasets/traffic_flow/PEMS04"
+adj_file: "/home/nbinh/datasets/traffic_flow/PEMS04/distance.csv"
+data_file: "/home/nbinh/datasets/traffic_flow/PEMS04/pems04.npz"
+
+num_nodes: 307
+channels: 3
+in_dim: 3
+out_dim: 1
+window: 12
+horizon: 12
+output_length: 12

@@ -1,0 +1,22 @@
+dataset: solar_original_24x24_split_6x2x2
+# full data shape:  (52560, 137, 1)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (31489, 24, 137, 1),   y.shape:    (31489, 24, 137, 1)
+# val x.shape:      (10465, 24, 137, 1),     y.shape:    (10465, 24, 137, 1)
+# test x.shape:     (10465, 24, 137, 1),    y.shape:    (10465, 24, 137, 1)
+
+# data_dir: "/home/nbinh/datasets/time_series/solar/solar_original_24x24_split_6x2x2"
+data_dir: "/AvaStore/DataSets/SmartHome/solar_energy/solar_original_24x24_split_6x2x2"
+normalized: None
+column_wise: False
+mean/std:           6.3527/10.1512
+train_mean/std:     6.8204/10.5587
+val_mean/std:       6.5009/9.9427
+test_mean/std:      4.8817/8.9357
+num_nodes: 137
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 24
+horizon: 24
+output_length: 24

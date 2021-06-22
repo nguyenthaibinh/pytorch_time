@@ -1,0 +1,22 @@
+dataset: covid19_global_original_7x7
+# full data shape:  (160, 25, 1)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (83, 7, 25, 1),   y.shape:    (83, 7, 25, 1)
+# val x.shape:      (19, 7, 25, 1),     y.shape:    (19, 7, 25, 1)
+# test x.shape:     (19, 7, 25, 1),    y.shape:    (19, 7, 25, 1)
+
+data_dir: "/home/nbinh/datasets/time_series/covid19_global/covid19_global_original_7x7"
+normalized: None
+column_wise: False
+data_mean: 2124.6813
+data_std: 5412.3162
+train_mean/std:     837.1769/3425.3691
+val_mean/std:       2960.4057/5148.5608
+test_mean/std:      4237.0394/7086.7326
+num_nodes: 25
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 7
+horizon: 7
+output_length: 7

@@ -1,0 +1,22 @@
+dataset: covid19_us_original_14x7
+# full data shape:  (320, 54, 1)     (B, T, N, C)
+# train/val/set: 7/1/2
+# train x.shape:    (204, 14, 54, 1),   y.shape:    (204, 7, 54, 1)
+# val x.shape:      (12, 14, 54, 1),     y.shape:    (12, 7, 54, 1)
+# test x.shape:     (44, 14, 54, 1),    y.shape:    (44, 7, 54, 1)
+
+data_dir: "/home/nbinh/datasets/time_series/covid19_us/covid19_us_original_14x7"
+normalized: None
+column_wise: False
+mean: 1528.5988
+std: 3226.5499
+train_mean/std:     719.7584/1344.1364
+val_mean/std:       2673.3349/2927.1888
+test_mean/std:      3931.6744/6241.3133
+num_nodes: 54
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 14
+horizon: 7
+output_length: 7

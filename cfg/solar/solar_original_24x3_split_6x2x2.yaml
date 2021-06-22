@@ -1,0 +1,21 @@
+dataset: solar_original_24x3_split_6x2x2
+# full data shape:  (52560, 137, 1)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (31510, 24, 137, 1),   y.shape:    (31510, 3, 137, 1)
+# val x.shape:      (10486, 24, 137, 1),     y.shape:    (10486, 3, 137, 1)
+# test x.shape:     (10486, 24, 137, 1),    y.shape:    (10486, 3, 137, 1)
+
+data_dir: "/home/nbinh/datasets/time_series/solar/solar_original_24x3_split_6x2x2"
+normalized: None
+column_wise: False
+mean/std:           6.3527/10.1512
+train_mean/std:     6.8162/10.5566
+val_mean/std:       6.4879/9.9370
+test_mean/std:      4.8719/8.9294
+num_nodes: 137
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 24
+horizon: 3
+output_length: 3

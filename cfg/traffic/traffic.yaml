@@ -1,0 +1,15 @@
+dataset: traffic
+# full data shape:  (17544, 862)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (10356, 168, 862, 1),     y.shape:    (10356, 1, 862, 1)
+# val x.shape:      (3509, 168, 862, 1),      y.shape:    (3509, 1, 862, 1)
+# test x.shape:     (3509, 168, 862, 1),      y.shape:    (3509, 1, 862, 1)
+
+data_dir: "/home/nbinh/datasets/time_series/traffic"
+num_nodes: 862
+channels: 1
+in_dim: 1
+out_dim: 1
+lag: 168
+horizon: 3
+output_length: 1

@@ -1,0 +1,19 @@
+dataset: covid19_data
+# full data shape:  (283, 25, 1)     (B, T, N, C)
+# train/val/set: 7/1/2
+# train x.shape:    (179, 14, 25, 1),   y.shape:    (179, 7, 25, 1)
+# val x.shape:      (8, 14, 25, 1),     y.shape:    (8, 7, 25, 1)
+# test x.shape:     (36, 14, 25, 1),    y.shape:    (36, 7, 25, 1)
+
+data_dir: "/home/nbinh/datasets/time_series/covid_19"
+mean/std:           398087.8704/1110786.9656
+train_mean/std:     142535.0002/379726.5800
+val_mean/std:       692210.6714/1264246.0171
+test_mean/std:      1028431.3515/1919628.0823
+num_nodes: 25
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 14
+horizon: 7
+output_length: 7

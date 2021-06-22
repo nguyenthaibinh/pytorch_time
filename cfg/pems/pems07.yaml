@@ -1,0 +1,18 @@
+dataset: pems07
+# full data shape:  (28224, 883, 1)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x, y.shape: (16912, 12, 883, 1)
+# val x, y.shape:   (5622, 12, 883, 1)
+# test x, y.shape:  (5621, 12, 883, 1)
+
+data_dir: "/home/nbinh/datasets/traffic_flow/PEMS07"
+adj_file: "/home/nbinh/datasets/traffic_flow/PEMS07/distance.csv"
+data_file: "/home/nbinh/datasets/traffic_flow/PEMS07/pems07.npz"
+
+num_nodes: 883
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 12
+horizon: 12
+output_length: 12

@@ -1,0 +1,19 @@
+dataset: PeMSD7_V_228
+# full data shape:  (12672, 228, 1)     (B, T, N, C)
+# train/val/set: 7/1/2
+# train x.shape:    (8848, 12, 228, 1),   y.shape:    (8848, 12, 228, 1)
+# val x.shape:      (1244, 12, 228, 1),     y.shape:    (1244, 12, 228, 1)
+# test x.shape:     (2511, 12, 228, 1),    y.shape:    (2511, 12, 228, 1)
+
+data_dir: "/home/nbinh/datasets/traffic_flow/PeMSD7/horizon_12"
+mean/std:           58.8892/13.4833
+train_mean/std:     59.1946/13.3194
+val_mean/std:       58.1900/13.9122
+test_mean/std:      58.1041/13.7912
+num_nodes: 228
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 12
+horizon: 12
+output_length: 12

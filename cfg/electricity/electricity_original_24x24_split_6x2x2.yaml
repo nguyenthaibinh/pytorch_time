@@ -1,0 +1,22 @@
+dataset: electricity_original_24x24_split_6x2x2
+# full data shape:  (26304, 321, 1)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (15736, 24, 321, 1),   y.shape:    (15736, 24, 321, 1)
+# val x.shape:      (5214, 24, 321, 1),     y.shape:    (5214, 24, 321, 1)
+# test x.shape:     (5213, 24, 321, 1),    y.shape:    (5213, 24, 321, 1)
+
+# data_dir: "/home/nbinh/datasets/time_series/electricity/electricity_original_24x24_split_6x2x2"
+data_dir: "/AvaStore/DataSets/SmartHome/electricity/electricity_original_24x24_split_6x2x2/"
+normalized: None
+column_wise: False
+mean/std:           2538.7916/15027.5702
+train_mean/std:     2606.3688/15671.2029
+val_mean/std:       2225.4562/10790.8272
+test_mean/std:      2656.1844/16672.1758
+num_nodes: 321
+channels: 1
+in_dim: 1
+out_dim: 1
+window: 24
+horizon: 24
+output_length: 24

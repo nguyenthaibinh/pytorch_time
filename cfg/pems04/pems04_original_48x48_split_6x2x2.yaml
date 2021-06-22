@@ -1,0 +1,22 @@
+dataset: pems04_original_48x48_split_6x2x2
+# full data shape:  (16992, 307, 3)     (B, T, N, C)
+# train/val/set: 6/2/2
+# train x.shape:    (10101, 48, 307, 3),   y.shape:    (10101, 48, 307, 3)
+# val x.shape:      (3303, 48, 307, 3),     y.shape:    (3303, 48, 307, 3)
+# test x.shape:     (3303, 48, 307, 3),    y.shape:    (3303, 48, 307, 3)
+
+data_dir: "/home/nbinh/datasets/traffic_flow/PEMS04/pems04_original_48x48_split_6x2x2"
+adj_file: /home/nbinh/datasets/traffic_flow/PEMS04/distance.csv
+normalized: None
+column_wise: False
+mean/std:           91.7414/127.3469
+train_mean/std:     90.3056/125.3326
+val_mean/std:       95.2293/132.5791
+test_mean/std:      93.9315/129.5796
+num_nodes: 307
+channels: 3
+in_dim: 3
+out_dim: 3
+window: 48
+horizon: 48
+output_length: 48
