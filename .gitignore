@@ -13,7 +13,6 @@ tensor_log/*
 /results/*
 /docs/*
 /.DS_Store
-/cfg/*
 
 # except these file (to keep the folder names visible in github)
 !/datasets/.gitkeep
